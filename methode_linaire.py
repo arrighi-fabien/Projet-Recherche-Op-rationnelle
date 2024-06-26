@@ -60,7 +60,7 @@ def get_chemin_pulp(sommets, all_arrete, all_arrete_poid):
         (i, j) = result[next_visited]
         final_result.append((i+1, sommets[i][1], sommets[i][2]))
         next_visited = j
-    return final_result
+    return final_result, pulp.value(model.objective)
 
 
 
@@ -120,7 +120,7 @@ def get_chemin_gurobi(sommets, all_arrete, all_arrete_poid):
         final_result.append((i+1, sommets[i][1], sommets[i][2]))
         next_visited = j
     #print("final_result = ", final_result)
-    return final_result
+    return final_result, model.ObjVal
 
 
 # entrée: 
@@ -147,9 +147,9 @@ def create_connexe_graph(all_cities):
 
     # Dessiner le graphe
     #node_pos = nx.get_node_attributes(G, 'pos')
-    # plt.figure(figsize=(8, 6))
-    # nx.draw(G, pos=node_pos, with_labels=True, node_size=500, node_color="skyblue", font_size=15, font_weight="bold")
-    # plt.show()
+    #plt.figure(figsize=(8, 6))
+    #nx.draw(G, pos=node_pos, with_labels=True, node_size=500, node_color="skyblue", font_size=15, font_weight="bold")
+    #plt.show()
     
     # Renvoies du résultat
     result = []
@@ -170,20 +170,20 @@ def start_getting_best_chemin(cities, data, choice_solve="GUROBIPY"):
     all_edges = []
     weighed_edges = {}
     # on créée un graphe connexe planaire
-    all_edges = create_connexe_graph(cities, weighed_edges)
+    all_edges = create_connexe_graph(cities)
 
     # création des arrêtes pondérées
     for (i, j) in all_edges:
         weighed_edges[(i, j)] = data.calculateDistance(i, j) 
 
     if choice_solve == "GUROBIPY":
-        best_chemin = get_chemin_gurobi(cities, all_edges, weighed_edges)
+        best_chemin, value = get_chemin_gurobi(cities, all_edges, weighed_edges)
     else:
-        best_chemin = get_chemin_pulp(cities, all_edges, weighed_edges)
+        best_chemin, value = get_chemin_pulp(cities, all_edges, weighed_edges)
     print("best chemin = ", best_chemin)
-    display_sol(best_chemin, cities)
-    return best_chemin
+    #display_sol(best_chemin, cities)
+    return best_chemin, value
 
 
 data = Cities()
-start_getting_best_chemin(data.cities, data, "GUROBIPY")
+chemin, value = start_getting_best_chemin(data.cities, data, "GUROBIPY")
